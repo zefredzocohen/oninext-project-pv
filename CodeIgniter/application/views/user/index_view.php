@@ -1,5 +1,11 @@
+<?php 
+	$user =  $this->session->userdata("username");
+echo '<h1>Chào mừng '.$user.'đến với trang quản trị</h1>';
+?>
+
 <div class="block search">
-<form id="top-search" action="<?php echo base_url().'site/default_home/search'?>">
+    <div class="row">
+        <form id="top-search" action="<?php echo base_url().'site/default_home/search'?>">
     <div class="col-md-3 col-sm-12">
         <input type="text" name="product" id="product" class="form-control" placeholder="Tìm kiếm theo id hoặc tên sản phẩm" />
     </div>
@@ -31,6 +37,11 @@
                    data: $("#top-search").serialize(), 
                    success: function(data){
 //                       alert(data);
+//                        console.log(data.url);
+                        if(typeof  data.url != "undefined"){
+                            window.location.href =data.url;
+                            return true;
+                        }
                         $('#test_manager').html(data);
                         console.log(data);
                    },
@@ -67,6 +78,9 @@
     </div>
     <div class="clear"></div>
 </form>
+    </div>
+
+    <div class="col-md-12" id="info-customer"><h3>Danh sách khách hàng theo thời gian mua</h3></div>
     <div id="test_manager">
         <?php if(isset($manage_table)&&$manage_table != ''){
             echo $manage_table;
@@ -94,3 +108,8 @@
  
  
     </div>
+<style>
+    #info-customer{
+        color: blue;
+    }
+</style>

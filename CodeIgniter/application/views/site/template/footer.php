@@ -1,1 +1,1 @@
-<?php echo '<br/></br/>footer.php';?>
+<div id="footer">this is</div>

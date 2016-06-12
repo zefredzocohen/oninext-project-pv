@@ -6,103 +6,113 @@
  * and open the template in the editor.
  */
 
-class default_home extends CI_Controller {
+class Default_home extends CI_Controller {
 
     public function __construct() {
         parent::__construct();
+        $this->load->model('m_items');
     }
-
-    /*
-     *
-     */
 
     public function index() {
         $data['template'] = 'site/index/index';
-//        $data['sliders'] = $this->Sliders->get_all_active();
-//        $data['cooker'] = $this->Sliders->get_slider_cooker_active();
-        /* Get 5 categories */
-//        $data['categories']  = $this->Category->getFiveActiveCategories();
-        /* Get Video and Social */
-//        $data['video'] = $this->Clips_model->video_by_id();
-//        $data['socials'] = $this->Clips_model->video_by_social();
-
-//        $data['hotline'] = $this->Support_model->get_hotline();
-
-
+        $list_customer = $this->m_items->get_list_customer();
+        $sum_record = $list_customer->num_rows();
+        $data['manage_table'] =  get_people_manage_table($list_customer, $sum_record>0?$sum_record:0, $this);
         $this->load->view('site/layout', $data);
     }
 
-    public function category() {
-        $id = $this->uri->segment(3);
-
-        $start = $this->uri->segment(4);
-        $per_page = 7;
-        $config['base_url'] = base_url() . 'site/default_home/category/' . $id . '/';
-        $config['total_rows'] = $this->category_model->getTotal();
-        $config['uri_segment'] = 5;
-        $config['per_page'] = $per_page;
-        $config['prev_link'] = '<<';
-        $config['next_link'] = '>>';
-        $config['last_link'] = 'Cuối';
-        $config['first_link'] = 'Đầu';
-        $this->pagination->initialize($config);
-
-        $data['category_product'] = $this->category_model->get_item_category($id, $per_page, $start);
-        $data['template'] = 'site/index/category_product';
-        $this->load->view('site/layout', $data);
-    }
-
-    public function product_detail() {
-        $proid = $this->uri->segment(3);
-        $data['product_detail'] = $this->category_model->product_detail($proid);
-        $data['template'] = 'site/product/product_detail';
-        $this->load->view('site/layout', $data);
-    }
 
     public function search() {
-        $keyword = $this->input->post('search');
-        $data['search'] = $this->category_model->search_items($keyword);
-        $data['template'] = 'site/product/search';
-        $this->load->view('site/layout', $data);
+        $item_id='';
+        $checkin = '';
+        $checkout = '';
+        $product = '';
+        
+        if(isset($_POST['product'])&&trim($_POST['product'])==''&&
+        isset($_POST['checkin'])&& trim($_POST['checkin'])==''&&
+        isset($_POST['checkout'])&&trim($_POST['checkout'])=='') 
+        {
+            echo json_encode(array(
+                'url'=> base_url().'user/index',
+            ));
+            exit();
+        }
+        if(isset($_POST['product'])&&(trim($_POST['product'])!=''))$product = trim($_POST['product']);
+        if(isset($_POST['checkin'])&&(trim($_POST['checkin'])!=''))$checkin = trim($_POST['checkin']);
+        if(isset($_POST['checkout'])&&(trim($_POST['checkout'])!=''))$checkout = trim($_POST['checkout']);
+        $special = $this->get_special(vn_str_filter($product));
+        if($special==1){
+            if($checkin!=''){
+                if(date('d-m-Y',strtotime($checkin)))$checkin=  date('Y-m-d',strtotime($checkin)); ;
+            }
+            if($checkout!=''){
+                if(date('d-m-Y',strtotime($checkout)))$checkout=  date('Y-m-d',strtotime($checkout)); ;
+            }
+            $search_data = $this->m_items->search($product,$checkin,$checkout,$special);
+//            echo json_encode($search_data->result_array());
+//            echo $this->db->last_query();
+//            exit();
+        }elseif ($special==2) {
+            if($checkin!=''){
+                if(date('d-m-Y',strtotime($checkin)))$checkin=  date('Y-m-d',strtotime($checkin)); ;
+            }
+            if($checkout!=''){
+                if(date('d-m-Y',strtotime($checkout)))$checkout=  date('Y-m-d',strtotime($checkout)); ;
+            }
+            $search_data = $this->m_items->search($product,$checkin,$checkout,$special);
+//            echo $this->db->last_query();
+//            echo json_encode($search_data->result_array());
+//            exit();
+        }else{
+            if($checkin!=''){
+                if(date('d-m-Y',strtotime($checkin))) $checkin=  date('Y-m-d',strtotime($checkin)); ;
+            }
+            if($checkout!=''){
+                if(date('d-m-Y',strtotime($checkout)))$checkout=  date('Y-m-d',strtotime($checkout)); ;
+            }
+            $item_id = explode('-', $product)[1];
+            $search_data = $this->m_items->search($item_id,$checkin,$checkout,$special);
+//            echo $this->db->last_query();
+//            echo json_encode($search_data->result_array());
+//            exit();
+        }
+        $sum_record = $search_data->num_rows();
+        $data['manage_table'] =  get_people_manage_table($search_data, $sum_record>0?$sum_record:0, $this);
+        echo json_encode($data['manage_table']);
     }
-
-    public function contact(){
-        /* Get all inventories */
-        $data['inventories'] = $this->Create_invetory->get_all_stores_1();
-        $data['template'] = 'site/contact/index';
-        $data['socials'] = $this->Clips_model->video_by_social();
-        $data['hotline'] = $this->Support_model->get_hotline();
-        $data['title'] = 'Thai2bla - lien-he';
-        $this->load->view('site/layout', $data);
+    
+    public function autocomplete(){
+        $query = trim($_POST['query']);
+        if($query !=NULL ){
+            $item=$this->m_items->getItem(vn_str_filter($query));
+        }
+        if($item !=null &&count($item)>0){
+            foreach ($item as $key =>$value){
+                $result[$key] = $value['name'].'-'.$value['item_id'];
+            }
+            echo json_encode($result);
+        }
+        
     }
-
-   /*
-    *
-    */
-    public function save_contact(){
-         $datacontact = array(
-             'fullname'=>$this->input->post('fullname'),
-             'title'=>$this->input->post('title'),
-             'email'=>$this->input->post('email'),
-             'tel'=>$this->input->post('tel'),
-             'content'=>$this->input->post('content'),
-         );
-
-         $this->Contacts_admin->insert_contact($datacontact);
-         $data['template'] = 'site/contact/success';
-         $this->load->view('site/layout', $data);
+    //        $listItem = $this->m_items->getListItem();
+//        foreach ($listItem as $key => $value){
+//            $listName[$value['item_id']] = array('name'=>$value['name'],'name_ascii'=>vn_str_filter($value['name']));
+//            
+//        }
+//        foreach ($listName as $key => $value){
+//            $this->m_items->update_info($key,$value['name_ascii']);
+//        }
+    
+    public function get_form_width(){
+        return 500;
     }
-    public function save_abc(){
-        $data = array(
-        'fullname' => $this->input->post('dfullname'),
-        'email' => $this->input->post('demail'),
-        'title' => $this->input->post('dtitle'),
-        'tel' => $this->input->post('dtel'),
-        'content' => $this->input->post('dcontent')
-        );
-        $this->Contacts_admin->insert_contact($data); // Calling Insert Model and its function.
-        $data['template'] = 'site/contact/index';
-       // echo "<script>alert('Liên hệ thành công....!!!! ');</script>";
-        redirect('lien-he.html', 'refresh');
+    public function get_special($str){
+        //trường hợp số
+        if (preg_match('/^[0-9]+$/', $str)) $return = 2;
+        // trường hợp hỗn hợp
+        elseif(preg_match('/-/', $str))$return =3;
+        // trường hợp chữ
+        else $return = 1;
+        return $return;
     }
 }

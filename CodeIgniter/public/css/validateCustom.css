@@ -1,0 +1,17 @@
+*{
+	margin: 0;
+	padding: 0;
+}
+
+.error{
+	color: red;
+}
+body{font: normal 12px/150% helvetica, tahoma, sans-serif;}
+
+#wrapper{width: 700px; margin: 20px auto; position: relative; background: transparent url(images/border.png) repeat-x top left; }
+img.stamp{position: absolute;top:30px; right: 20px}
+
+form{padding: 70px 0px 50px 20px; background: transparent url(images/border.png) repeat-x bottom left;border: 1px solid black;}
+label{
+	display: block;	font-size: 12px; width: auto;
+}
